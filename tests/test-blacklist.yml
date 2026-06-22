@@ -1,0 +1,46 @@
+name: Test blacklist input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create HTML files (one valid, one invalid but blacklisted)
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/html-blacklist"
+          cat > "$GITHUB_WORKSPACE/html-blacklist/valid.html" << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <title>Valid Page</title>
+            </head>
+            <body>
+              <h1>Valid HTML</h1>
+            </body>
+          </html>
+          EOF
+          cat > "$GITHUB_WORKSPACE/html-blacklist/ignore-me.html" << 'EOF'
+          <html>
+            <body>
+              <p>This is invalid HTML without DOCTYPE
+            </body>
+          </html>
+          EOF
+      - id: action
+        uses: .
+        with:
+          root: ${{ github.workspace }}/html-blacklist
+          blacklist: ignore-me.html
+          log_level: WARNING
+      - name: Assert result is success when invalid file is blacklisted
+        env:
+          ACTUAL: ${{ steps.action.outputs.result }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "0" ]; then
+            echo "FAIL: expected exit code 0 when invalid file is blacklisted, got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS"

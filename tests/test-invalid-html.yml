@@ -1,0 +1,35 @@
+name: Test invalid HTML5 detection
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create invalid HTML file
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/html-invalid"
+          cat > "$GITHUB_WORKSPACE/html-invalid/bad.html" << 'EOF'
+          <html>
+            <body>
+              <p>Unclosed paragraph
+              <div>Unclosed div
+            </body>
+          </html>
+          EOF
+      - id: action
+        uses: .
+        with:
+          root: ${{ github.workspace }}/html-invalid
+          log_level: WARNING
+        continue-on-error: true
+      - name: Assert result is non-zero for invalid HTML
+        env:
+          ACTUAL: ${{ steps.action.outputs.result }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" = "0" ]; then
+            echo "FAIL: expected non-zero exit code for invalid HTML, got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS: invalid HTML correctly detected with exit code $ACTUAL"

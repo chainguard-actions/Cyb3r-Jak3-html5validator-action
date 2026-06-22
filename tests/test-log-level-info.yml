@@ -1,0 +1,38 @@
+name: Test log level INFO
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create valid HTML file
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/html-info"
+          cat > "$GITHUB_WORKSPACE/html-info/index.html" << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <title>Info Level Test</title>
+            </head>
+            <body>
+              <h1>Log Level Test</h1>
+            </body>
+          </html>
+          EOF
+      - id: action
+        uses: .
+        with:
+          root: ${{ github.workspace }}/html-info
+          log_level: INFO
+      - name: Assert result is success with INFO log level
+        env:
+          ACTUAL: ${{ steps.action.outputs.result }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "0" ]; then
+            echo "FAIL: expected exit code 0 for valid HTML with INFO log level, got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS"
