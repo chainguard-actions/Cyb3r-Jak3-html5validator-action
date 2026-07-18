@@ -1,4 +1,4 @@
-name: Test basic valid HTML validation
+name: Test blacklist feature to ignore invalid HTML directory
 on:
   workflow_dispatch:
 jobs:
@@ -9,16 +9,17 @@ jobs:
       - id: action
         uses: .
         with:
-          root: tests/fixtures/valid
+          root: tests/fixtures
+          blacklist: invalid
           log_level: WARNING
           skip_git_check: "true"
-      - name: Assert result is success
+      - name: Assert result is success when invalid dir is blacklisted
         env:
           ACTUAL: ${{ steps.action.outputs.result }}
         run: |
           echo "actual: $ACTUAL"
           if [ "$ACTUAL" != "0" ]; then
-            echo "FAIL: expected result '0' (success) but got '$ACTUAL'"
+            echo "FAIL: expected result '0' (success) when invalid dir is blacklisted but got '$ACTUAL'"
             exit 1
           fi
           echo "PASS"
