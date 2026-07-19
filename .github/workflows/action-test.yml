@@ -1,0 +1,99 @@
+name: Action Test
+
+on:
+  push:
+    paths:
+      - ".github/workflows/action-test.yml"
+      - "tests/**"
+      - "Dockerfile"
+      - "entrypoint.sh"
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sundays at 00:00
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: No checkout test
+      uses: Cyb3r-Jak3/html5validator-action@443b108eb8e134b63a1f8a8ba0c942d552608ed7 # master
+      with:
+        root: tests/valid/
+      continue-on-error: true
+      env:
+        HTML5_ACTION_DEBUG: true
+
+    - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
+
+    - name: Plain Test
+      uses: ./
+      with:
+        root: tests/valid/
+      env:
+        HTML5_ACTION_DEBUG: true
+
+    - name: Testing Options
+      id: valid
+      uses: ./
+      with:
+        root: tests/valid/
+        format: json
+        log_level: INFO
+        extra: -lll
+        css: true
+      env:
+        HTML5_ACTION_DEBUG: true
+
+    - name: Test config
+      id: config
+      uses: ./
+      with:
+        config: tests/example_config.yaml
+      env:
+        HTML5_ACTION_DEBUG: true
+
+    - name: Check Blacklist
+      id: blacklist
+      uses: ./
+      with:
+        root: tests/
+        blacklist: invalid
+      env:
+        HTML5_ACTION_DEBUG: true
+
+    - name: Check Failure
+      id: invalid
+      uses: ./
+      with:
+        root: tests/invalid/
+        log_level: INFO
+        css: true
+      env:
+        HTML5_ACTION_DEBUG: true
+      continue-on-error: true
+
+    - name: Check Empty
+      id: empty
+      uses: ./
+      with:
+        log_level: INFO
+        css: true
+      env:
+        HTML5_ACTION_DEBUG: true
+      continue-on-error: true
+
+    - uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2
+      with:
+        name: log
+        path: log.log
+
+    - name: Check outputs
+      run: bash ./tests/output_check.sh
+      env:
+        VALID_OUT: ${{ steps.valid.outputs.result }}
+        INVALID_OUT: ${{ steps.invalid.outputs.result }}
+        CONFIG_OUT: ${{ steps.config.outputs.result }}
+        BLACKLIST_OUT: ${{ steps.blacklist.outputs.result }}
+        EMPTY_OUT: ${{ steps.empty.outputs.result }}

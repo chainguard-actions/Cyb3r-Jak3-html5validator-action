@@ -1,0 +1,21 @@
+name: Integration Test
+
+on:
+  push:
+    branches:
+    - "master"
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sundays at 00:00
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
+    - name: Tests Integration with Github Actions.
+      uses: Cyb3r-Jak3/html5validator-action@443b108eb8e134b63a1f8a8ba0c942d552608ed7 # master
+      with:
+        root: tests/valid/
+        log_level: INFO
