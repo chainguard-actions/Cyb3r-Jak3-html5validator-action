@@ -1,15 +1,84 @@
-# Cyb3r-Jak3/html5validator-action
+# HTML5 Validator Action
 
-Checks HTML5 Syntax using html5validator
+![Actions Status](https://github.com/Cyb3r-Jak3/html5validator-action/workflows/Action%20Test/badge.svg?branch=master) [![Integration Test](https://github.com/Cyb3r-Jak3/html5validator-action/actions/workflows/integration.yml/badge.svg)](https://github.com/Cyb3r-Jak3/html5validator-action/actions/workflows/integration.yml)
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/Cyb3r-Jak3/html5validator-action](https://github.com/Cyb3r-Jak3/html5validator-action).
+This action checks the syntax of your html files in the path you specify.  
+It used [html5validator](https://github.com/svenkreiss/html5validator) and a [docker image that I build from it](https://github.com/Cyb3r-Jak3/html5validator-docker).
 
-## Versions
+For help getting started, check out the [wiki](https://github.com/Cyb3r-Jak3/html5validator-action/wiki/Getting-Started).
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v7.0.0 | [`v7.0.0`](https://github.com/chainguard-actions/Cyb3r-Jak3-html5validator-action/tree/v7.0.0) | [`02b835c`](https://github.com/Cyb3r-Jak3/html5validator-action/commit/02b835cb536d5a22714059a755940fa6f1f3fe1b) |
-| v7.2.0 | [`v7.2.0`](https://github.com/chainguard-actions/Cyb3r-Jak3-html5validator-action/tree/v7.2.0) | [`41633d4`](https://github.com/Cyb3r-Jak3/html5validator-action/commit/41633d488eb36e18fd1a95ffc83daf1bf22a75bd) |
+## Inputs
+
+| Flag             | Description                                                                   | Default   |
+|------------------|-------------------------------------------------------------------------------|-----------|
+| `root`           | The root path of the files you want to check                                  |           |
+| `config`         | Path to config file to use.                                                   |           |
+| `format`         | The format for logging. Supported values: `json, xml, gnu, text`.             |           |
+| `log_level`      | The log level to use. Supported values: `DEBUG, INFO, WARNING`.               | `WARNING` |
+| `css`            | Enable to check css. Supported values: `true, false`                          | `false`   |
+| `blacklist`*     | The names of files or directories to blacklist. **These are not full paths.** |           |
+| `skip_git_check` | Skip checking that the repo has been checked out                              |           |
+
+* Examples of `blacklist`
+
+Correct Example:
+
+```yaml
+    - name: HTML5Validator
+      uses: Cyb3r-Jak3/html5validator-action
+      with:
+        root: tests/
+        blacklist: invalid
+```
+
+Incorrect Example:
+
+```yaml
+    - name: HTML5Validator
+      uses: Cyb3r-Jak3/html5validator-action
+      with:
+        root: tests/
+        blacklist: tests/invalid
+```
+
+## Outputs
+
+### `result`
+
+The exit code of the validation.
+
+## Example usage
+
+```yaml
+      uses: Cyb3r-Jak3/html5validator-action@v7.2.0
+      with:
+        root: tests/valid/
+```
+
+A log file is automatically created. To retrieve it, use Github's upload artifact action after the validator action.
+
+```yaml
+    - uses: actions/upload-artifact@v3
+      with:
+        name: log
+        path: log.log
+```
+
+## Keep up-to-date with GitHub Dependabot
+
+Since [Dependabot](https://docs.github.com/en/github/administering-a-repository/keeping-your-actions-up-to-date-with-github-dependabot)
+has [native GitHub Actions support](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem),
+to enable it on your GitHub repo all you need to do is add the `.github/dependabot.yml` file:
+
+```yaml
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+```
 
 ## Privacy
 

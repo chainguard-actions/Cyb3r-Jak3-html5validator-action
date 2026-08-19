@@ -1,0 +1,110 @@
+name: Action Test
+
+on:
+  push:
+    paths:
+      - ".github/workflows/action-test.yml"
+      - "tests/**"
+      - "Dockerfile"
+      - "entrypoint.sh"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/action-test.yml"
+      - "tests/**"
+      - "Dockerfile"
+      - "entrypoint.sh"
+
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    env:
+      HTML5_ACTION_DEBUG: true
+    steps:
+
+      # Need to manually change branch when making changes
+    - name: No checkout test. Fail at Git Check
+      uses: Cyb3r-Jak3/html5validator-action@master
+      with:
+        root: tests/valid/
+      continue-on-error: true
+
+      # Need to manually change branch when making changes
+    - name: No checkout test. Passes at Git Check
+      uses: Cyb3r-Jak3/html5validator-action@master
+      with:
+        root: tests/valid/
+        skip_git_check: true
+      continue-on-error: true
+
+    - uses: actions/checkout@v4
+
+    - name: Plain Test
+      uses: ./
+      with:
+        root: tests/valid/
+
+    - name: Testing Options
+      id: valid
+      uses: ./
+      with:
+        root: tests/valid/
+        format: json
+        log_level: INFO
+        extra: -lll
+        css: true
+
+    - name: Test config
+      id: config
+      uses: ./
+      with:
+        config: tests/example_config.yaml
+
+    - name: Check Blacklist
+      id: blacklist
+      uses: ./
+      with:
+        root: tests/
+        blacklist: invalid
+
+    - name: Check Failure
+      id: invalid
+      uses: ./
+      with:
+        root: tests/invalid/
+        log_level: INFO
+        css: true
+      continue-on-error: true
+
+    - name: Check Empty
+      id: empty
+      uses: ./
+      with:
+        log_level: INFO
+        css: true
+      continue-on-error: true
+
+    - name: Check Bad Root
+      id: bad-root
+      uses: ./
+      with:
+        root: /tmp/missing
+        log_level: INFO
+        css: true
+      continue-on-error: true
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: log
+        path: log.log
+
+    - name: Check outputs
+      run: bash ./tests/output_check.sh
+      env:
+        VALID_OUT: ${{ steps.valid.outputs.result }}
+        INVALID_OUT: ${{ steps.invalid.outputs.result }}
+        CONFIG_OUT: ${{ steps.config.outputs.result }}
+        BLACKLIST_OUT: ${{ steps.blacklist.outputs.result }}
+        EMPTY_OUT: ${{ steps.empty.outputs.result }}
+        BAD_ROOT_OUT: ${{ steps.bad-root.outputs.result }}
